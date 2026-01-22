@@ -1,0 +1,83 @@
+from rest_framework import serializers
+from .models import Product, Order, OrderItem
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'price',
+            'stock',
+        )
+
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Price must be greater than 0."
+            )
+        return value
+    
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    # product = ProductSerializer() #OrderItem → Product ilişkisi tek obje olduğu için many=True kullanılmaz.
+    # Yukaridaki gibi yazarsak butun fieldlar yazilir ('name', 'description' ,'price', 'stock',)
+    # Sadece belirli fieldlar yazilsin istiyorsak;
+    product_name = serializers.CharField(source='product.name') 
+    product_price = serializers.DecimalField(max_digits=10, decimal_places=2, source='product.price')
+    class Meta:
+        model = OrderItem
+        fields = (
+            'product_name',
+            'product_price', #belirli field degil de hepsini yazsaydik sadece 'prodcut' ve 'quantity' yeterliydi.
+            'quantity',
+            'item_subtotal'
+        )
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)  #Nested serializer making
+    total_price = serializers.SerializerMethodField(method_name='total')  #SerializerMethodField
+
+    def total(self, obj):  #SerializerMethodField'a ait fonksiyon. (SerializerMethodField için get_<field_adi> isimli bir metot aranır, yada method_name parametresi ile belirlenir.)
+        order_items = obj.items.all()  #we use related name 'items' here.
+        return sum(order_item.item_subtotal for order_item in order_items)  #models.py item_subtotal function
+
+    class Meta:
+        model = Order
+        fields = (
+            'order_id',
+            'created_at',
+            'user',
+            'status',
+            'items',   #Adding the nested serializer into fields
+            'total_price'
+        )
+
+
+
+class ProductInfoSerializer(serializers.Serializer):  #generic / plain (normal) Serializer
+    # get all products, count of products, max price
+    products = ProductSerializer(many=True)
+    count = serializers.IntegerField()
+    max_price = serializers.FloatField()
+
+
+# =====================================================
+# Serializer vs ModelSerializer (Özet Tablo)
+# =====================================================
+
+# Özellik            | Serializer                  | ModelSerializer
+# ------------------ | --------------------------- | ------------------------------
+# Modele bağlı mı?   | Hayır                       | Evet
+# Field tanımı       | Manuel                      | Otomatik (modelden)
+# CRUD uyumu         | Zayıf                       | Güçlü
+# create / update    | Manuel                      | Otomatik
+# Validation         | Manuel                      | Otomatik
+# Model dışı veri    | Evet                        | Hayır
+# Esneklik           | Yüksek                      | Orta
+# Kod miktarı        | Fazla                       | Az
+# Bakım kolaylığı    | Düşük                       | Yüksek
+# Kullanım alanı     | Özet / İstatistik / Custom  | Standart REST API
+# =====================================================
