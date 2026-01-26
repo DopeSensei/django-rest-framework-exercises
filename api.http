@@ -1,0 +1,38 @@
+GET http://localhost:8000/products/ HTTP/1.1
+
+###
+
+#We need to be an admin user to send the 'POST' request.
+POST http://localhost:8000/products/ HTTP/1.1
+#For "ProductListCreateAPIView"
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY5NDQ5NTU3LCJpYXQiOjE3Njk0NDkyNTcsImp0aSI6IjE3MWUwZTIyM2QzNTRiZTlhZWJiZDg1ZTMyZGQ0ZTYxIiwidXNlcl9pZCI6IjEifQ.cQEVAq9mfqr5uY13pHy-aYKeokEG97V7JXbNKJVxgQ8
+#Authorization header token was obtained from the admin registration below.
+#If you change the "username"/"password" to someone who is not an admin and get it's token, to the bearer,
+#It won't work because of the "get_permissions()" method of "ProductListCreateAPIView"
+#Bearer tokens can expire in 15 minutes and you may get 401
+
+{
+    "name": "Television",
+    "price": 300.00,
+    "stock": 14,
+    "description": "An amazing new TV"
+}
+
+###
+
+POST http://localhost:8000/api/token/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "admin",
+    "password": "test"
+}
+
+###
+
+GET http://localhost:8000/user-orders/ HTTP/1.1
+#For "UserOrderListAPIView"
+#If we don't use "Authorization"; we get "HTTP/1.1 401 Unauthorized"
+#Because UserOrderListAPIView's permission_classes = [IsAuthenticated]
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY5NDQ5NTU3LCJpYXQiOjE3Njk0NDkyNTcsImp0aSI6IjE3MWUwZTIyM2QzNTRiZTlhZWJiZDg1ZTMyZGQ0ZTYxIiwidXNlcl9pZCI6IjEifQ.cQEVAq9mfqr5uY13pHy-aYKeokEG97V7JXbNKJVxgQ8
