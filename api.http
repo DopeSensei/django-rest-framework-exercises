@@ -2,6 +2,34 @@ GET http://localhost:8000/products/ HTTP/1.1
 
 ###
 
+GET http://localhost:8000/products/2/ HTTP/1.1
+#For the "RetrieveUpdateDestroyAPIView"
+
+###
+
+DELETE http://localhost:8000/products/2/ HTTP/1.1
+#For the "RetrieveUpdateDestroyAPIView"
+#Because of the "get_permissions()" method it doesn't work if not admin.
+#You may get the access token via "POST http://localhost:8000/api/token/" below.
+
+###
+
+PUT http://localhost:8000/products/2/ HTTP/1.1
+#Also for the "RetrieveUpdateDestroyAPIView"
+#Because of the "get_permissions()" method it doesn't work if not admin.
+#You may get the access token via "POST http://localhost:8000/api/token/" below.
+
+Content-Type: application/json
+
+{
+    "name": "Television",
+    "price": 300.00,
+    "stock": 14,
+    "description": "An amazing new TV"
+}
+
+###
+
 #We need to be an admin user to send the 'POST' request.
 POST http://localhost:8000/products/ HTTP/1.1
 #For "ProductListCreateAPIView"
@@ -36,3 +64,13 @@ GET http://localhost:8000/user-orders/ HTTP/1.1
 #If we don't use "Authorization"; we get "HTTP/1.1 401 Unauthorized"
 #Because UserOrderListAPIView's permission_classes = [IsAuthenticated]
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY5NDQ5NTU3LCJpYXQiOjE3Njk0NDkyNTcsImp0aSI6IjE3MWUwZTIyM2QzNTRiZTlhZWJiZDg1ZTMyZGQ0ZTYxIiwidXNlcl9pZCI6IjEifQ.cQEVAq9mfqr5uY13pHy-aYKeokEG97V7JXbNKJVxgQ8
+
+###
+
+POST http://localhost:8000/api/token/refresh/ HTTP/1.1
+Content-Type: application/json
+#Refresh token
+
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2OTYyMTMzNywiaWF0IjoxNzY5NTM0OTM3LCJqdGkiOiJlZDJjNTlmMWUzYWU0MjA3OWE0YmVhMmJmYjJhZTRlZCIsInVzZXJfaWQiOiIxIn0.SMDx0ZAA3b8dliuc3bfxCr_c2ZUMGU6vYe_aB8JEVFw"
+}

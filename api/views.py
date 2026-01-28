@@ -48,10 +48,22 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
 #    serializer = ProductSerializer(product)
 #    return Response(serializer.data)
 
-class ProductDetailAPIView(generics.RetrieveAPIView):
-    queryset = Product.objects.all()  #product variable in product_detail()
-    serializer_class = ProductSerializer  #serializer variable in product_detail()
-    lookup_url_kwarg = 'product_id'  #bunu ekleyeceksen urls.py'da 'pk'i de degistir.
+#RetrieveApiView ID'si (veya başka bir lookup alanı) verilen TEK kaydi dondurur.
+#class ProductDetailAPIView(generics.RetrieveAPIView):
+#    queryset = Product.objects.all()  #product variable in product_detail()
+#    serializer_class = ProductSerializer  #serializer variable in product_detail()
+#    lookup_url_kwarg = 'product_id'  #bunu ekleyeceksen urls.py'da 'pk'i de degistir.
+
+class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_url_kwarg = 'product_id'
+
+    def get_permissions(self):
+        self.permission_classes = [AllowAny]
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAdminUser]
+        return super().get_permissions()
 
 
 ##################

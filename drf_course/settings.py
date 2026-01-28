@@ -28,7 +28,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'api',
     'rest_framework',
-    'silk'  #Silk
+    'silk',  #Silk
+    'drf_spectacular'
 ]
 
 MIDDLEWARE = [
@@ -120,6 +121,20 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Your Project API',
+    'DESCRIPTION': 'Your project description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
+}
+
+# Schema, API'nin kullanım kılavuzudur.
+# Hangi adrese hangi istek atılır, ne gönderilir ve ne cevap gelir bunu açıkça anlatır.
+# Koda bakmadan API'yi doğru kullanabilmek için vardır.
+# drf-spectacular bu schema'yı otomatik olarak üretir.
 
