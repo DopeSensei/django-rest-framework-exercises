@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.views import APIView
+from api.filters import ProductFilter
 
 
 ###################
@@ -24,6 +25,9 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all() #or .exclude(stock__gt=0)  #product variable in product_detail() / .all() yerine filter()/exclude() kullanabilirsin.
     #stock__gt=0 degeri 0'dan buyuk olan productlari dondurur. / exclude() sadece 0 olani dondurur.
     serializer_class = ProductSerializer  #serializer variable in product_detail()
+    #filterset_fields = ('name', 'price') #Filtering (products/?name=Television)
+    #filterset_fields yerine class kullanabiliiriz (filters.py)
+    filterset_class = ProductFilter #(filters.py)
 
     #Only admin can send the 'POST' request
     def get_permissions(self):
