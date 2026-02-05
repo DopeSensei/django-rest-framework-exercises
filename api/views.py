@@ -7,7 +7,9 @@ from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.views import APIView
-from api.filters import ProductFilter
+from api.filters import ProductFilter, InStockFilterBackend
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 ###################
@@ -28,6 +30,12 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
     #filterset_fields = ('name', 'price') #Filtering (products/?name=Television)
     #filterset_fields yerine class kullanabiliiriz (filters.py)
     filterset_class = ProductFilter #(filters.py)
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter, InStockFilterBackend] #from django_filters.rest_framework imported
+    #SearchFilter = arama, #OrderingFilter = siralama
+    search_fields = ['=name', 'description'] #models.py Product / "=name" for exact match
+    #/products/?ordering=price
+    ordering_fields = ['name', 'price', 'stock']
+    #/products/?search=vision
 
     #Only admin can send the 'POST' request
     def get_permissions(self):
