@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from api.filters import ProductFilter, InStockFilterBackend
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 
 ###################
@@ -24,7 +25,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 #Handles both GET and POST requests
 class ProductListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Product.objects.all() #or .exclude(stock__gt=0)  #product variable in product_detail() / .all() yerine filter()/exclude() kullanabilirsin.
+    queryset = Product.objects.order_by('pk') #or .exclude(stock__gt=0)  #product variable in product_detail() / .all() yerine filter()/exclude()/order_by('pk')(pagination icin) kullanabilirsin.
     #stock__gt=0 degeri 0'dan buyuk olan productlari dondurur. / exclude() sadece 0 olani dondurur.
     serializer_class = ProductSerializer  #serializer variable in product_detail()
     #filterset_fields = ('name', 'price') #Filtering (products/?name=Television)
@@ -36,6 +37,12 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
     #/products/?ordering=price
     ordering_fields = ['name', 'price', 'stock']
     #/products/?search=vision
+    pagination_class = LimitOffsetPagination #PageNumberPagination
+    #pagination_class.page_size = 2 #override settings.py
+    #pagination_class.page_query_param = 'pagenum' #for the url bar ?pagenum=2
+    #pagination_class.page_size_query_param = 'size' #costumization over how many produts we get per page
+    #pagination_class.max_page_size = 6 #limit the products per page
+    LimitOffsetPagination
 
     #Only admin can send the 'POST' request
     def get_permissions(self):
