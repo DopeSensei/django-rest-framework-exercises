@@ -1,18 +1,16 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter  # ViewSet'ler icin otomatik CRUD URL'leri uretir.
 from . import views
 
 # api/urls.py: app-level endpoint tanimlari.
-# Her path ilgili view class'ini cagirir.
+# Neden: view'leri URL pattern'leri ile eslemek.
 
 urlpatterns = [
-    # /products/ -> listele + yeni product olustur
-    path('products/', views.ProductListCreateAPIView.as_view()),
-    # /products/info -> extra bilgi (count, max_price)
-    path('products/info', views.ProductInfoAPIView.as_view()),
-    # /products/<product_id>/ -> tek product getir/guncelle/sil
-    path('products/<int:product_id>/', views.ProductDetailAPIView.as_view()),
-    # /orders/ -> tum order'lari listeler
-    path('orders/', views.OrderListAPIView.as_view()),
-    # /user-orders/ -> sadece login kullanicinin order'lari
-    path('user-orders/', views.UserOrderListAPIView.as_view(), name='user-orders')
+    path('products/', views.ProductListCreateAPIView.as_view()),  # /products/ -> list + create
+    path('products/info', views.ProductInfoAPIView.as_view()),  # /products/info -> ozet bilgi
+    path('products/<int:product_id>/', views.ProductDetailAPIView.as_view()),  # /products/1/ -> retrieve/update/delete
 ]
+
+router = DefaultRouter()  # ViewSet icin otomatik route olusturur (list, create, retrieve, update, destroy).
+router.register('orders', views.OrderViewSet)  # /orders/ ve /orders/{id}/ endpoint'lerini ekler.
+urlpatterns += router.urls  # Router'in urettigi URL'leri ana listeye baglar.

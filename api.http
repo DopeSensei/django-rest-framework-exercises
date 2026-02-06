@@ -53,8 +53,8 @@ POST http://localhost:8000/api/token/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "username": "admin",
-    "password": "test"
+    "username": "john-doe",
+    "password": "123698745j"
 }
 
 ###
@@ -74,3 +74,13 @@ Content-Type: application/json
 {
     "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2OTYyMTMzNywiaWF0IjoxNzY5NTM0OTM3LCJqdGkiOiJlZDJjNTlmMWUzYWU0MjA3OWE0YmVhMmJmYjJhZTRlZCIsInVzZXJfaWQiOiIxIn0.SMDx0ZAA3b8dliuc3bfxCr_c2ZUMGU6vYe_aB8JEVFw"
 }
+
+###
+
+GET http://localhost:8000/orders/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzcwNDA3MjA1LCJpYXQiOjE3NzA0MDY5MDUsImp0aSI6IjNkODExZjIwYzY2ZjQwZGJhMTFkNGE3MjhhNzgzYjRkIiwidXNlcl9pZCI6IjIifQ.OO3R0mDb6L1zqA7XG6LYwIO2ybaRpImA_RFEjbbJOBA
+
+###
+
+GET http://localhost:8000/orders/4fa3bb60-982a-421f-8c8c-11cf45ebfe38 HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzcwNDA3MjA1LCJpYXQiOjE3NzA0MDY5MDUsImp0aSI6IjNkODExZjIwYzY2ZjQwZGJhMTFkNGE3MjhhNzgzYjRkIiwidXNlcl9pZCI6IjIifQ.OO3R0mDb6L1zqA7XG6LYwIO2ybaRpImA_RFEjbbJOBA

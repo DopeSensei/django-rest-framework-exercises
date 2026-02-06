@@ -3,72 +3,59 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 # models.py: veritabani tablolarini ve iliskileri tanimlar.
+# Neden: ORM uzerinden DB schema'sini tek yerde kontrol etmek.
 
 # Custom User modeli: ileride ekstra alan eklemek icin AbstractUser'dan turetilir.
-# settings.py icindeki AUTH_USER_MODEL ile bu model kullanilir.
 class User(AbstractUser):
-    pass
+    pass  # AUTH_USER_MODEL ile bu model kullanilir (settings.py).
 
 
 class Product(models.Model):
-    # name: urun adi.
-    name = models.CharField(max_length=200)
-    # description: uzun aciklama.
-    description = models.TextField()
-    # price: para alani; max_digits toplam basamak, decimal_places ondalik basamak.
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    # stock: negatif olmayacak sayi.
-    stock = models.PositiveIntegerField()
-    # image: urun resmi; MEDIA_ROOT/products/ altina kaydeder. Bos birakilabilir.
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    name = models.CharField(max_length=200)  # Urun adi; max_length DB'de string limitidir.
+    description = models.TextField()  # Uzun aciklama; length limiti yok.
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # Para icin Decimal kullanilir (float hata yapabilir).
+    stock = models.PositiveIntegerField()  # Negatif olamaz; stok sayisi.
+    image = models.ImageField(upload_to='products/', blank=True, null=True)  # Opsiyonel resim; MEDIA_ROOT/products/ altina kaydeder.
 
-    # in_stock: DB'de alan degil, hesaplanan property.
+    # DB'de alan degil, hesaplanan property; neden: stok kontrolunu kolay okumak.
     @property
     def in_stock(self):
         return self.stock > 0
 
+    # Admin/console'da okunabilir isim.
     def __str__(self):
-        # __str__: Django admin/console'da okunabilir isim.
         return self.name
 
 
 class Order(models.Model):
-    # StatusChoices: order durumlari icin sabit liste.
+    # Order durumlarini sabitlemek icin TextChoices kullanilir.
     class StatusChoices(models.TextChoices):
         PENDING = 'Pending'
         CONFIRMED = 'Confirmed'
         CANCELLED = 'Cancelled'
 
-    # order_id: UUID primary key, otomatik olusturulur (auto-increment yok).
-    order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    # user: siparisi veren kullanici; user silinirse siparisler de silinir.
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    # created_at: kayit olusunca otomatik zaman.
-    created_at = models.DateTimeField(auto_now_add=True)
-    # status: StatusChoices ile sinirli deger.
-    status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.PENDING)
+    order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)  # Auto-increment yerine UUID kullanir.
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Siparisi veren kullanici; user silinirse order'lar silinir.
+    created_at = models.DateTimeField(auto_now_add=True)  # Kayit olusunca otomatik zaman.
+    status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.PENDING)  # Durum alani; choices ile sinirli.
 
-    # products: ManyToMany, ama ara tablo OrderItem (quantity gibi ekstra alan icin).
-    products = models.ManyToManyField(Product, through="OrderItem", related_name='orders')
+    products = models.ManyToManyField(Product, through="OrderItem", related_name='orders')  # Quantity gibi ek alan icin ara tablo kullanilir.
 
+    # Admin/console'da okunabilir metin.
     def __str__(self):
-        # __str__: admin/console icin okunabilir metin.
         return f"Order {self.order_id} by {self.user.username}"
 
 
 class OrderItem(models.Model):
-    # order: ilgili siparis; related_name='items' -> order.items ile erisim.
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    # product: ilgili urun.
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    # quantity: siparisteki adet.
-    quantity = models.PositiveIntegerField()
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')  # order.items ile erisim; siparis silinirse item'lar silinir.
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)  # Siparisteki urun; urun silinirse item da silinir.
+    quantity = models.PositiveIntegerField()  # Siparis adedi; negatif olamaz.
 
-    # item_subtotal: urun fiyati * adet; DB'de tutulmaz.
+    # DB'de alan degil; toplam satir tutarini hesaplar.
     @property
     def item_subtotal(self):
         return self.product.price * self.quantity
 
+    # Admin/console icin okunabilir metin.
     def __str__(self):
-        # __str__: admin/console icin okunabilir metin.
         return f"{self.quantity} x {self.product.name} in Order {self.order.order_id}"

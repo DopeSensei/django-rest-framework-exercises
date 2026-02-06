@@ -7,32 +7,17 @@ from rest_framework_simplejwt.views import (
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 # drf_course/urls.py: proje seviyesindeki URL konfigurasyonu.
-# Burada app URL'lerini ve global endpoint'leri bagliyoruz.
+# Neden: app URL'lerini ve global endpoint'leri tek merkezde toplamak.
 
 urlpatterns = [
-    # Django admin paneli
-    path('admin/', admin.site.urls),
-    # api app URL'leri
-    path('', include('api.urls')),
-    # Silk profiling arayuzu
-    path('silk/', include('silk.urls', namespace='silk')),
+    path('admin/', admin.site.urls),  # Django admin paneli
+    path('', include('api.urls')),  # api app URL'leri
+    path('silk/', include('silk.urls', namespace='silk')),  # Silk profiling arayuzu
 
-    # JWT token alma ve yenileme
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # JWT access+refresh token
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # JWT refresh token
 
-    # OpenAPI schema
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    # API'nin tum yapisini (endpoint'ler, request/response) makine-okur formatta uretir.
-    # Swagger ve Redoc gibi arayuzler bu schemayi buradan okur.
-
-    # Optional UI:
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    # API'yi tarayicidan gorsel ve interaktif sekilde incelemek ve test etmek icin kullanilir.
-    # "Try it out" ile direkt request atabilirsin.
-
-    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-    # API'nin daha sade, okunabilir ve paylasmaya uygun dokumantasyon gorunumudur.
-    # Genelde diger gelistiriciler veya client'larla paylasmak icin kullanilir.
-
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),  # OpenAPI schema (makine-okur)
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),  # Swagger UI
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),  # Redoc UI
 ]
