@@ -1,6 +1,7 @@
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# BASE_DIR: proje kok dizini (manage.py'nin oldugu seviye).
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -8,11 +9,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY: sadece gelistirme icin; prod'da gizli tutulmali.
 SECRET_KEY = 'django-insecure-%hjisw!0c0)bs&s9m#0e(#(=g54-#f+q2-d3+p%puk)0=5qrp#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG True iken hata detaylari gorunur; prod'da False olmali.
 DEBUG = True
 
+# ALLOWED_HOSTS: prod ortaminda domain/IP listesi.
 ALLOWED_HOSTS = []
 
 
@@ -25,12 +29,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_extensions',
-    'api',
-    'rest_framework',
-    'silk',  #Silk
-    'drf_spectacular',
-    'django_filters'
+    'django_extensions',  # gelistirme yardimci komutlari (shell_plus, graph_models)
+    'api',  # senin uygulama app'in
+    'rest_framework',  # DRF (API framework)
+    'silk',  # profiling/performans araci
+    'drf_spectacular',  # OpenAPI schema generator
+    'django_filters'  # django-filter integration
 ]
 
 MIDDLEWARE = [
@@ -41,9 +45,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'silk.middleware.SilkyMiddleware',  #Silk
+    'silk.middleware.SilkyMiddleware',  # Silk icin middleware
 ]
 
+# URL route dosyasi
 ROOT_URLCONF = 'drf_course.urls'
 
 TEMPLATES = [
@@ -68,6 +73,7 @@ WSGI_APPLICATION = 'drf_course.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+# Guncel kurulumda sqlite kullaniliyor (lokal gelistirme icin pratik).
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -116,17 +122,23 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom user model (api/models.py -> class User)
 AUTH_USER_MODEL = 'api.User'
 
 REST_FRAMEWORK = {
+    # Auth: JWT + Session. JWT icin simplejwt paketi gerekir.
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
+    # drf-spectacular schema uretimi icin
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Query param filtreleme (django-filters)
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    #PageNumberPagination
+    # Pagination default'u
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # Sayfa basina default kayit sayisi
     'PAGE_SIZE': 2
 }
 
@@ -138,8 +150,7 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-# Schema, API'nin kullanım kılavuzudur.
-# Hangi adrese hangi istek atılır, ne gönderilir ve ne cevap gelir bunu açıkça anlatır.
-# Koda bakmadan API'yi doğru kullanabilmek için vardır.
-# drf-spectacular bu schema'yı otomatik olarak üretir.
-
+# Schema, API'nin kullanim kilavuzudur.
+# Hangi adrese hangi istek atilir, ne gonderilir ve ne cevap gelir bunu aciklar.
+# Koda bakmadan API'yi dogru kullanabilmek icin vardir.
+# drf-spectacular bu schema'yi otomatik olarak uretir.

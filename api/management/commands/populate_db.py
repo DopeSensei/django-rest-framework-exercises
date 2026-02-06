@@ -5,16 +5,19 @@ from django.core.management.base import BaseCommand
 from django.utils import lorem_ipsum
 from api.models import User, Product, Order, OrderItem
 
+# populate_db: ornek veri ureten management command.
+# Calistirma: python manage.py populate_db
+
 class Command(BaseCommand):
     help = 'Creates application data'
 
     def handle(self, *args, **kwargs):
-        # get or create superuser
+        # Admin user varsa al, yoksa olustur.
         user = User.objects.filter(username='admin').first()
         if not user:
             user = User.objects.create_superuser(username='admin', password='test')
 
-        # create products - name, desc, price, stock, image
+        # Ornek product listesi (name, description, price, stock, image)
         products = [
             Product(name="A Scanner Darkly", description=lorem_ipsum.paragraph(), price=Decimal('12.99'), stock=4),
             Product(name="Coffee Machine", description=lorem_ipsum.paragraph(), price=Decimal('70.99'), stock=6),
@@ -24,14 +27,14 @@ class Command(BaseCommand):
             Product(name="Watch", description=lorem_ipsum.paragraph(), price=Decimal('500.05'), stock=0),
         ]
 
-        # create products & re-fetch from DB
+        # Bulk create ile toplu ekleme (performansli).
         Product.objects.bulk_create(products)
         products = Product.objects.all()
 
 
-        # create some dummy orders tied to the superuser
+        # Admin kullaniciya bagli ornek order'lar olustur.
         for _ in range(3):
-            # create an Order with 2 order items
+            # Bir order icinde 2 adet order item olustur.
             order = Order.objects.create(user=user)
             for product in random.sample(list(products), 2):
                 OrderItem.objects.create(

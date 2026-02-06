@@ -3,8 +3,11 @@ from api.models import Order, User
 from django.urls import reverse
 from rest_framework import status
 
-# Create your tests here.
+# tests.py: basit test ornekleri (Django TestCase + DRF status kodlari).
+
+# UserOrderList endpoint'i sadece login kullanicinin order'larini getirmeli.
 class UserOrderTestCase(TestCase):
+    # setUp: her testten once calisir; test verisi olusturur.
     def setUp(self):
         user1 = User.objects.create_user(username='user1', password='test')
         user2 = User.objects.create_user(username='user2', password='test')
@@ -13,8 +16,10 @@ class UserOrderTestCase(TestCase):
         Order.objects.create(user=user2)
         Order.objects.create(user=user2)
 
+    # Auth olan user sadece kendi order'larini gormeli.
     def test_user_order_endpoint_retrieves_only_authenticated_user_orders(self):
         user = User.objects.get(username='user2')
+        # force_login: test client ile user'i login eder.
         self.client.force_login(user)
         response = self.client.get(reverse('user-orders'))
 
@@ -22,6 +27,7 @@ class UserOrderTestCase(TestCase):
         orders = response.json()
         self.assertTrue(all(order['user'] == user.id for order in orders))
 
+    # Login olmayan istek 401 donmeli.
     def test_user_order_list_unauthenticated(self):
         response = self.client.get(reverse('user-orders'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
