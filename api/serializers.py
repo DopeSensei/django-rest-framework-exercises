@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 from .models import Product, Order, OrderItem
 
@@ -41,8 +42,64 @@ class OrderItemSerializer(serializers.ModelSerializer):
         )
 
 
+# OrderCreateSerializer: write (create/update) islemleri icin kullanilir.
+# Neden: nested items (OrderItem) create/update varsayilan ModelSerializer ile otomatik yapilmaz.
+class OrderCreateSerializer(serializers.ModelSerializer):
+    # OrderItemCreateSerializer: request icindeki items listesi icin nested write serializer.
+    # Neden: sadece product ve quantity alanlarini alarak daha sade bir input beklemek.
+    class OrderItemCreateSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = OrderItem
+            fields = ('product', 'quantity')  # product FK id + quantity; price gibi alanlar product'tan gelir.
+
+    order_id = serializers.UUIDField(read_only=True)  # Order id'yi response'ta gormek icin; request'te gonderilmez.
+    items = OrderItemCreateSerializer(many=True, required=False)  # many=True -> liste; required=False -> items gelmezse validation fail olmasin (PATCH icin).
+
+    # update override: nested OrderItem'lari manuel guncellemek icin.
+    def update(self, instance, validated_data):
+        orderitem_data = validated_data.pop('items')  # items verisini ayir; Order modelinde alan degil.
+
+        with transaction.atomic():  # Tum islemler tek transaction; hata olursa hepsi rollback.
+            instance = super().update(instance, validated_data)  # Order modelinin normal alanlarini update eder.
+
+            if orderitem_data is not None:
+                instance.items.all().delete()  # Var olan itemleri silip yenilerini yaziyoruz (replace mantigi).
+
+                # Update edilmis data ile itemlari tekrar olustur.
+                for item in orderitem_data:
+                    OrderItem.objects.create(order=instance, **item)  # item dict -> product, quantity.
+
+        return instance
+
+    # create override: Order + OrderItem'lari ayni request'te olusturmak icin.
+    def create(self, validated_data):
+        orderitem_data = validated_data.pop('items')  # items listesi Order tablosuna yazilmayacak.
+
+        # transaction.atomic: bu block icindeki DB islemleri ya tamamen basarili olur ya da geri alinir.
+        with transaction.atomic():
+            order = Order.objects.create(**validated_data)  # Order kaydini olustur (user, status gibi alanlar).
+
+            for item in orderitem_data:
+                OrderItem.objects.create(order=order, **item)  # Her item icin OrderItem olustur.
+
+        return order
+
+    class Meta:
+        model = Order
+        fields = (
+            'order_id',
+            'user',
+            'status',
+            'items'
+        )
+        extra_kwargs = {
+            'user': {'read_only': True} # 'user'i POST requestlerde otomatik olarak ayarlar.
+        }
+
+
 # Order serializer: order + nested items + hesaplanan toplam fiyat.
 class OrderSerializer(serializers.ModelSerializer):
+    order_id = serializers.UUIDField(read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)  # related_name='items' uzerinden nested serializer.
     total_price = serializers.SerializerMethodField(method_name='total')  # DB'de olmayan hesaplanan alan.
 

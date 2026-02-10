@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from api.filters import InStockFilterBackend, OrderFilter, ProductFilter
 from api.models import Order, OrderItem, Product
 from api.serializers import (OrderSerializer, ProductInfoSerializer,
-                             ProductSerializer)
+                             ProductSerializer, OrderCreateSerializer)
 
 # views.py: API endpoint davranislarini topladigimiz katman.
 # Neden: HTTP istegini queryset + serializer + permission ile birlestirip response uretiriz.
@@ -149,6 +149,15 @@ class OrderViewSet(viewsets.ModelViewSet):
     pagination_class = None  # ViewSet'te pagination istemiyorsan None (tum listeyi tek response).
     filterset_class = OrderFilter  # /orders/?status=Pending gibi filtreleri aktif eder.
     filter_backends = [DjangoFilterBackend]  # filterset_class'in calismasi icin backend gerekir.
+
+    # 'user'i POST requestlerde otomatik olarak ayarlar. 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == 'create' or self.action == 'update': # Aksiyon create veya update ise OrderCreateSerializer kullanir yoksa normal Serializer kullanir
+            return OrderCreateSerializer
+        return super().get_serializer_class()
 
     # Staff ise tum order'lari gor, degilse sadece kendi order'larini goster.
     # Neden: normal user baska kullanicinin verisini gormesin.
