@@ -1,5 +1,5 @@
 from django.contrib import admin
-from api.models import Order, OrderItem, User
+from api.models import Order, OrderItem, User, Product
 
 # admin.py: Django admin paneli konfigurasyonu.
 # Neden: admin arayuzunde Order + OrderItem'lari rahat gormek.
@@ -16,3 +16,4 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(Order, OrderAdmin)  # Order icin ozellestirilmis admin.
 admin.site.register(User)  # User modelini admin'e ekler.
+admin.site.register(Product) # Product modelini admin'e ekler.

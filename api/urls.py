@@ -9,6 +9,7 @@ urlpatterns = [
     path('products/', views.ProductListCreateAPIView.as_view()),  # /products/ -> list + create
     path('products/info', views.ProductInfoAPIView.as_view()),  # /products/info -> ozet bilgi
     path('products/<int:product_id>/', views.ProductDetailAPIView.as_view()),  # /products/1/ -> retrieve/update/delete
+    path('users/', views.UserListView.as_view())
 ]
 
 router = DefaultRouter()  # ViewSet icin otomatik route olusturur (list, create, retrieve, update, destroy).

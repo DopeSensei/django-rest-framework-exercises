@@ -1,4 +1,7 @@
 from django.db.models import Max
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
@@ -11,9 +14,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.filters import InStockFilterBackend, OrderFilter, ProductFilter
-from api.models import Order, OrderItem, Product
+from api.models import Order, OrderItem, Product, User
 from api.serializers import (OrderSerializer, ProductInfoSerializer,
-                             ProductSerializer, OrderCreateSerializer)
+                             ProductSerializer, OrderCreateSerializer, UserSerializer)
 
 # views.py: API endpoint davranislarini topladigimiz katman.
 # Neden: HTTP istegini queryset + serializer + permission ile birlestirip response uretiriz.
@@ -48,6 +51,7 @@ class ProductCreateAPIView(generics.CreateAPIView):
 # Product listesi + yeni product olusturma endpoint'i (GET/POST).
 # Neden: listeleme ve create icin ayri endpoint yazmadan DRF generic kullanmak.
 class ProductListCreateAPIView(generics.ListCreateAPIView):
+    throttle_scope = 'products'  # ScopedRateThrottle ile eslesir; settings.py'de 'products' icin rate tanimlanir.
     queryset = Product.objects.order_by('pk')  # Base QuerySet; pagination stabil olsun diye pk ile siralar.
     serializer_class = ProductSerializer  # Response ve POST/PUT body formatini belirler.
     #filterset_fields = ('name', 'price') # Filtering (products/?name=Television)
@@ -62,6 +66,15 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
     #pagination_class.page_size_query_param = 'size' #costumization over how many produts we get per page
     #pagination_class.max_page_size = 6 #limit the products per page
     LimitOffsetPagination  # Tek basina yazilinca etkisi yok; sadece not olarak kalmis.
+
+    @method_decorator(cache_page(60 * 15, key_prefix='product_list'))  # 15 dk boyunca response cache'ler; Redis gibi backend'e yazar. key_prefix ayni endpointi gruplamak ve invalidate icin isim verir.
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        import time
+        time.sleep(2)  # Demo/egitim amacli gecikme: cache etkisini gormek icin ilk istegi yavaslatir.
+        return super().get_queryset()
 
     # GET herkese acik, POST icin admin kontrolu uygular.
     def get_permissions(self):
@@ -143,12 +156,18 @@ class UserOrderListAPIView(generics.ListAPIView):
 # Order icin tam CRUD saglayan ViewSet.
 # Neden: router ile otomatik list/create/retrieve/update/delete endpoint'leri olusur.
 class OrderViewSet(viewsets.ModelViewSet):
+    throttle_scope = 'orders'  # ScopedRateThrottle icin scope; settings.py'deki 'orders' rate'i uygulanir.
     queryset = Order.objects.prefetch_related('items__product')  # Nested serializer icin prefetch; sorgu sayisini azaltir.
     serializer_class = OrderSerializer  # Order + items formatini belirler.
     permission_classes = [IsAuthenticated]  # Tumu icin login zorunlu; guest erisimi kapatir.
     pagination_class = None  # ViewSet'te pagination istemiyorsan None (tum listeyi tek response).
     filterset_class = OrderFilter  # /orders/?status=Pending gibi filtreleri aktif eder.
     filter_backends = [DjangoFilterBackend]  # filterset_class'in calismasi icin backend gerekir.
+
+    @method_decorator(cache_page(60 * 15, key_prefix='order_list'))  # 15 dk cache; order listesi sik kullaniliyorsa DB yukunu azaltir.
+    @method_decorator(vary_on_headers("Authorization"))  # Cache key'i Authorization header'ina gore ayirir; her kullanici kendi cache'ini gorur.
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     # 'user'i POST requestlerde otomatik olarak ayarlar. 
     def perform_create(self, serializer):
@@ -196,3 +215,9 @@ class ProductInfoAPIView(APIView):
             'max_price': products.aggregate(max_price=Max('price'))['max_price']
             })  # Dict -> serializer ile tek response.
         return Response(serializer.data)
+
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    pagination_class = None

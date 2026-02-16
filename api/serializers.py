@@ -1,10 +1,26 @@
 from django.db import transaction
 from rest_framework import serializers
-from .models import Product, Order, OrderItem
+from .models import Product, Order, OrderItem, User
 
 # serializers.py: API payload'larini Python objelerine cevirir ve validation yapar.
 # Neden: request/response formatini tek yerde kontrol etmek.
 
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            # exclude = ('password', 'user_permissions', 'get_full_name') # Istemedigin fieldlari cikarir geri kalan hepsini yazdirir. exclude() 'is_authenticated' dondurmez.
+            #'__all__' # Best practice degil!
+            'username',
+            'password',
+            'email',
+            'is_staff',
+            'is_superuser',
+            'get_full_name',
+            'user_permissions',
+            'orders' #models.py/Order class/user variable/related_name='orders'. / Related name atamadiysan bu field'i 'order_set' olarak yazmalisin.
+        )
 
 # Product modeli icin serializer (read/write).
 class ProductSerializer(serializers.ModelSerializer):

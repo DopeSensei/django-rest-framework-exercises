@@ -35,7 +35,8 @@ class Order(models.Model):
         CANCELLED = 'Cancelled'
 
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)  # Auto-increment yerine UUID kullanir.
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Siparisi veren kullanici; user silinirse order'lar silinir.
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')  # Siparisi veren kullanici; user silinirse order'lar silinir. / related_name='orders' bir nevi User classinin icinde 'orders' field'i olusturmak gibidir,
+    # related_name='orders' sayesinde User objesi uzerinden user.orders.all() diyerek bu kullanicinin tum siparislerine erisebiliriz.
     created_at = models.DateTimeField(auto_now_add=True)  # Kayit olusunca otomatik zaman.
     status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.PENDING)  # Durum alani; choices ile sinirli.
 

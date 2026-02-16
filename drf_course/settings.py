@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent  # Proje kok dizini.
@@ -119,7 +120,22 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # drf-spectacular schema uretimi
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],  # Query param filtreleme
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',  # Default pagination
-    'PAGE_SIZE': 2  # Sayfa basina default kayit sayisi
+    'PAGE_SIZE': 2,  # Sayfa basina default kayit sayisi
+    'DEFAULT_THROTTLE_CLASSES': [  #drf.org/throttling default settings
+        'rest_framework.throttling.AnonRateThrottle',  # Login olmayan (anon) kullanicilar icin global rate limiti uygular.
+        'rest_framework.throttling.ScopedRateThrottle',  # View'daki throttle_scope ile eslesip endpoint bazli limit uygular.
+        #'rest_framework.throttling.UserRateThrottle'
+        #'api.throttles.BurstRateThrottle',
+        #'api.throttles.SustainedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/minute',
+        'products': '120/minute',
+        'orders': '60/minute',
+        #'user': '3/minute'
+        #'burst': '10/minute',
+        #'sustained': '15/hours'
+    }
 }
 
 SPECTACULAR_SETTINGS = {
@@ -129,6 +145,22 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1)
+}
+
 
 # Schema, API'nin kullanim kilavuzudur.
 # Neden: endpoint'leri ve request/response formatlarini otomatik dokumante eder.
