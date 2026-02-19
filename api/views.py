@@ -17,6 +17,7 @@ from api.filters import InStockFilterBackend, OrderFilter, ProductFilter
 from api.models import Order, OrderItem, Product, User
 from api.serializers import (OrderSerializer, ProductInfoSerializer,
                              ProductSerializer, OrderCreateSerializer, UserSerializer)
+from api.tasks import send_order_confirmation_email
 
 # views.py: API endpoint davranislarini topladigimiz katman.
 # Neden: HTTP istegini queryset + serializer + permission ile birlestirip response uretiriz.
@@ -169,9 +170,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    # 'user'i POST requestlerde otomatik olarak ayarlar. 
+    # 'user'i POST requ estlerde otomatik olarak ayarlar. 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        order = serializer.save(user=self.request.user)  # save() icinde Order olusur; user alanini request.user ile baglar (kim olusturdu bilgisi).
+        send_order_confirmation_email.delay(order.order_id, self.request.user.email)  # Celery task'i async calisir; request beklemeden mail gonderir.
 
     def get_serializer_class(self):
         if self.action == 'create' or self.action == 'update': # Aksiyon create veya update ise OrderCreateSerializer kullanir yoksa normal Serializer kullanir

@@ -8,7 +8,7 @@ from . import views
 urlpatterns = [
     path('products/', views.ProductListCreateAPIView.as_view()),  # /products/ -> list + create
     path('products/info', views.ProductInfoAPIView.as_view()),  # /products/info -> ozet bilgi
-    path('products/<int:product_id>/', views.ProductDetailAPIView.as_view()),  # /products/1/ -> retrieve/update/delete
+    path('products/<int:product_id>/', views.ProductDetailAPIView.as_view(), name='product-detail'),  # /products/1/ -> retrieve/update/delete // named url for reverse function (tests.py/self.url)
     path('users/', views.UserListView.as_view())
 ]
 
